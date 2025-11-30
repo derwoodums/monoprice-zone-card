@@ -543,15 +543,15 @@ class MonopriceZoneCardEditor extends HTMLElement {
       },
       {
         name: 'treble',
-        selector: { entity: { domain: 'number', filter: { entity_id: '*treble*' } } }
+        selector: { entity: { filter: { domain: 'number' } } }
       },
       {
         name: 'bass',
-        selector: { entity: { domain: 'number', filter: { entity_id: '*bass*' } } }
+        selector: { entity: { filter: { domain: 'number' } } }
       },
       {
         name: 'balance',
-        selector: { entity: { domain: 'number', filter: { entity_id: '*balance*' } } }
+        selector: { entity: { filter: { domain: 'number' } } }
       },
       {
         name: 'show_tone_controls',
@@ -614,4 +614,4 @@ window.customCards.push({
   documentationURL: 'https://github.com/derwoodums/monoprice-zone-card'
 });
 
-console.info('%c MONOPRICE-ZONE-CARD %c 2.4.1 ', 'color: white; background: #4a9ced; font-weight: bold;', 'color: #4a9ced; background: white; font-weight: bold;');
+console.info('%c MONOPRICE-ZONE-CARD %c 2.4.0 ', 'color: white; background: #4a9ced; font-weight: bold;', 'color: #4a9ced; background: white; font-weight: bold;');
