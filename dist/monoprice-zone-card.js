@@ -494,9 +494,183 @@ class MonopriceZoneCard extends HTMLElement {
       balance: 'number.monoprice_zone_1_balance'
     };
   }
+
+  static getConfigElement() {
+    return document.createElement('monoprice-zone-card-editor');
+  }
+}
+
+// Visual Editor
+class MonopriceZoneCardEditor extends HTMLElement {
+  constructor() {
+    super();
+    this.attachShadow({ mode: 'open' });
+    this._config = {};
+  }
+
+  set hass(hass) {
+    this._hass = hass;
+    this._mediaPlayers = Object.keys(hass.states)
+      .filter(e => e.startsWith('media_player.'))
+      .sort();
+    this._numberEntities = Object.keys(hass.states)
+      .filter(e => e.startsWith('number.'))
+      .sort();
+    this.render();
+  }
+
+  setConfig(config) {
+    this._config = { ...config };
+    this.render();
+  }
+
+  render() {
+    if (!this._hass) return;
+
+    this.shadowRoot.innerHTML = `
+      <style>
+        .form {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+          padding: 16px;
+        }
+        .row {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+        label {
+          font-weight: 500;
+          font-size: 14px;
+          color: var(--primary-text-color);
+        }
+        select, input {
+          padding: 8px 12px;
+          border: 1px solid var(--divider-color);
+          border-radius: 8px;
+          font-size: 14px;
+          background: var(--card-background-color);
+          color: var(--primary-text-color);
+        }
+        select:focus, input:focus {
+          outline: none;
+          border-color: var(--primary-color);
+        }
+        .checkbox-row {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .checkbox-row input {
+          width: 18px;
+          height: 18px;
+        }
+        .hint {
+          font-size: 12px;
+          color: var(--secondary-text-color);
+          margin-top: 2px;
+        }
+      </style>
+      <div class="form">
+        <div class="row">
+          <label>Name (optional)</label>
+          <input type="text" id="name" value="${this._config.name || ''}" placeholder="Zone display name">
+        </div>
+
+        <div class="row">
+          <label>Media Player *</label>
+          <select id="media_player">
+            <option value="">Select media player...</option>
+            ${this._mediaPlayers.map(e => `
+              <option value="${e}" ${this._config.media_player === e ? 'selected' : ''}>${e}</option>
+            `).join('')}
+          </select>
+        </div>
+
+        <div class="row">
+          <label>Treble Entity</label>
+          <select id="treble">
+            <option value="">None</option>
+            ${this._numberEntities.map(e => `
+              <option value="${e}" ${this._config.treble === e ? 'selected' : ''}>${e}</option>
+            `).join('')}
+          </select>
+        </div>
+
+        <div class="row">
+          <label>Bass Entity</label>
+          <select id="bass">
+            <option value="">None</option>
+            ${this._numberEntities.map(e => `
+              <option value="${e}" ${this._config.bass === e ? 'selected' : ''}>${e}</option>
+            `).join('')}
+          </select>
+        </div>
+
+        <div class="row">
+          <label>Balance Entity</label>
+          <select id="balance">
+            <option value="">None</option>
+            ${this._numberEntities.map(e => `
+              <option value="${e}" ${this._config.balance === e ? 'selected' : ''}>${e}</option>
+            `).join('')}
+          </select>
+        </div>
+
+        <div class="checkbox-row">
+          <input type="checkbox" id="show_tone_controls" ${this._config.show_tone_controls !== false ? 'checked' : ''}>
+          <label for="show_tone_controls">Show tone controls</label>
+        </div>
+        <div class="hint">Toggle visibility of treble, bass, and balance sliders</div>
+      </div>
+    `;
+
+    // Add event listeners
+    this.shadowRoot.getElementById('name').addEventListener('input', (e) => {
+      this._updateConfig('name', e.target.value || null);
+    });
+
+    this.shadowRoot.getElementById('media_player').addEventListener('change', (e) => {
+      this._updateConfig('media_player', e.target.value);
+    });
+
+    this.shadowRoot.getElementById('treble').addEventListener('change', (e) => {
+      this._updateConfig('treble', e.target.value || null);
+    });
+
+    this.shadowRoot.getElementById('bass').addEventListener('change', (e) => {
+      this._updateConfig('bass', e.target.value || null);
+    });
+
+    this.shadowRoot.getElementById('balance').addEventListener('change', (e) => {
+      this._updateConfig('balance', e.target.value || null);
+    });
+
+    this.shadowRoot.getElementById('show_tone_controls').addEventListener('change', (e) => {
+      this._updateConfig('show_tone_controls', e.target.checked);
+    });
+  }
+
+  _updateConfig(key, value) {
+    if (value === null || value === '') {
+      delete this._config[key];
+    } else {
+      this._config[key] = value;
+    }
+    
+    // Dispatch config-changed event
+    const event = new CustomEvent('config-changed', {
+      detail: { config: { ...this._config } },
+      bubbles: true,
+      composed: true
+    });
+    this.dispatchEvent(event);
+  }
 }
 
 customElements.define('monoprice-zone-card', MonopriceZoneCard);
+customElements.define('monoprice-zone-card-editor', MonopriceZoneCardEditor);
 
 window.customCards = window.customCards || [];
 window.customCards.push({
@@ -505,4 +679,4 @@ window.customCards.push({
   description: 'A compact card for controlling Monoprice multi-zone amplifier zones with tone controls'
 });
 
-console.info('%c MONOPRICE-ZONE-CARD %c 2.0.0 ', 'color: white; background: #4a9ced; font-weight: bold;', 'color: #4a9ced; background: white; font-weight: bold;');
+console.info('%c MONOPRICE-ZONE-CARD %c 2.1.0 ', 'color: white; background: #4a9ced; font-weight: bold;', 'color: #4a9ced; background: white; font-weight: bold;');
